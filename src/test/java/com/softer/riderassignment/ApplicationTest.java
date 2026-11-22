@@ -115,4 +115,25 @@ public class ApplicationTest {
                 () -> assertEquals(LocalDateTime.of(2026, 11, 18, 10, 0), response.getAssignedAt())
         );
     }
+
+    @Test
+    @DisplayName("should update assignment with id=1")
+    @Sql(statements = INSERT_ASSIGNMENT, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(statements = DELETE_ASSIGNMENTS, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void test5_updateAssignment() {
+        RiderAssignment updatedAssignment = new RiderAssignment(
+                null, 1003L, 503L, AssignmentStatus.ACCEPTED, null);
+
+        restTemplate.put(baseUrl + "/{id}", updatedAssignment, 1L);
+
+        RiderAssignment storedAssignment = testH2Repository.findById(1L).orElse(null);
+        assertAll(
+                () -> assertNotNull(storedAssignment),
+                () -> assertEquals(1L, storedAssignment.getId()),
+                () -> assertEquals(1003L, storedAssignment.getDeliveryId()),
+                () -> assertEquals(503L, storedAssignment.getRiderId()),
+                () -> assertEquals(AssignmentStatus.ACCEPTED, storedAssignment.getStatus()),
+                () -> assertEquals(LocalDateTime.of(2026, 11, 18, 10, 0), storedAssignment.getAssignedAt())
+        );
+    }
 }
