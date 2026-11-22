@@ -16,8 +16,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -95,5 +97,22 @@ public class ApplicationTest {
         assertEquals(1002L, storedAssignment.getDeliveryId());
         assertEquals(502L, storedAssignment.getRiderId());
         assertEquals(AssignmentStatus.ASSIGNED, storedAssignment.getStatus());
+    }
+
+    @Test
+    @DisplayName("should get assignment with id=1")
+    @Sql(statements = INSERT_ASSIGNMENT, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(statements = DELETE_ASSIGNMENTS, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void test4_getAssignmentById() {
+        RiderAssignment response = restTemplate.getForObject(baseUrl + "/{id}", RiderAssignment.class, 1L);
+
+        assertAll(
+                () -> assertNotNull(response),
+                () -> assertEquals(1L, response.getId()),
+                () -> assertEquals(1001L, response.getDeliveryId()),
+                () -> assertEquals(501L, response.getRiderId()),
+                () -> assertEquals(AssignmentStatus.ASSIGNED, response.getStatus()),
+                () -> assertEquals(LocalDateTime.of(2026, 11, 18, 10, 0), response.getAssignedAt())
+        );
     }
 }
