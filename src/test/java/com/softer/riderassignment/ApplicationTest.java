@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -22,6 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class ApplicationTest {
+
+    private static final String INSERT_ASSIGNMENT =
+            "INSERT INTO rider_assignments (id, delivery_id, rider_id, status, assigned_at) "
+            + "VALUES (1, 1001, 501, 'ASSIGNED', TIMESTAMP '2026-11-18 10:00:00')";
+    private static final String DELETE_ASSIGNMENTS = "DELETE FROM rider_assignments";
 
     @LocalServerPort
     private int port;
@@ -50,5 +56,17 @@ public class ApplicationTest {
         assertNotNull(response);
         assertEquals(0, response.size());
         assertEquals(0, testH2Repository.findAll().size());
+    }
+
+    @Test
+    @DisplayName("should get all assignments when table is not empty")
+    @Sql(statements = INSERT_ASSIGNMENT, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(statements = DELETE_ASSIGNMENTS, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void test2_getAssignmentsWhenTableIsNotEmpty() {
+        List<?> response = restTemplate.getForObject(baseUrl, List.class);
+
+        assertNotNull(response);
+        assertEquals(1, response.size());
+        assertEquals(1, testH2Repository.findAll().size());
     }
 }
