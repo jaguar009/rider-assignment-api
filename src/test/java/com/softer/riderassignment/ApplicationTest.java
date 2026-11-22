@@ -1,5 +1,7 @@
 package com.softer.riderassignment;
 
+import com.softer.riderassignment.model.AssignmentStatus;
+import com.softer.riderassignment.model.RiderAssignment;
 import com.softer.riderassignment.repository.TestH2Repository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,5 +70,30 @@ public class ApplicationTest {
         assertNotNull(response);
         assertEquals(1, response.size());
         assertEquals(1, testH2Repository.findAll().size());
+    }
+
+    @Test
+    @DisplayName("should register a new assignment")
+    @Sql(statements = DELETE_ASSIGNMENTS, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void test3_registerAssignment() {
+        RiderAssignment assignment = new RiderAssignment(
+                null, 1002L, 502L, AssignmentStatus.ASSIGNED, null);
+
+        RiderAssignment response = restTemplate.postForObject(baseUrl, assignment, RiderAssignment.class);
+
+        assertNotNull(response);
+        assertNotNull(response.getId());
+        assertEquals(1002L, response.getDeliveryId());
+        assertEquals(502L, response.getRiderId());
+        assertEquals(AssignmentStatus.ASSIGNED, response.getStatus());
+        assertNotNull(response.getAssignedAt());
+
+        List<RiderAssignment> storedAssignments = testH2Repository.findAll();
+        assertEquals(1, storedAssignments.size());
+        RiderAssignment storedAssignment = storedAssignments.getFirst();
+        assertEquals(response.getId(), storedAssignment.getId());
+        assertEquals(1002L, storedAssignment.getDeliveryId());
+        assertEquals(502L, storedAssignment.getRiderId());
+        assertEquals(AssignmentStatus.ASSIGNED, storedAssignment.getStatus());
     }
 }
