@@ -136,4 +136,16 @@ public class ApplicationTest {
                 () -> assertEquals(LocalDateTime.of(2026, 11, 18, 10, 0), storedAssignment.getAssignedAt())
         );
     }
+
+    @Test
+    @DisplayName("should delete assignment with id=1")
+    @Sql(statements = INSERT_ASSIGNMENT, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(statements = DELETE_ASSIGNMENTS, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void test6_deleteAssignment() {
+        assertEquals(1, testH2Repository.findAll().size());
+
+        restTemplate.delete(baseUrl + "/{id}", 1L);
+
+        assertEquals(0, testH2Repository.findAll().size());
+    }
 }
